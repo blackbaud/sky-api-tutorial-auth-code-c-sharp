@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MvcSandbox.Controllers
+namespace Blackbaud.AuthCodeFlowTutorial.Controllers
 {
     public class HomeController : Controller
     {

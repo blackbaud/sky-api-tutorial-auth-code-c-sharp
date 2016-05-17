@@ -7,6 +7,7 @@
 *.exe
 *.pdb
 *.dll.config
+*.lock.json
 *.cache
 *.suo
 # Include dlls if they’re in the NuGet packages directory
@@ -25,6 +26,7 @@ _UpgradeReport_Files/
 bin/
 obj/
 TestResults/
+.vscode/
 ###################
 # Web publish log #
 ###################
@@ -73,4 +75,3 @@ _[Ss]cripts
 *.nupkg
 *.ncrunchsolution
 *.dot[Cc]over
-*.lock.json

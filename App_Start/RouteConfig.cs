@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
-namespace SampleApp
+namespace Blackbaud.AuthCodeFlowTutorial
 {
     public class RouteConfig
     {
