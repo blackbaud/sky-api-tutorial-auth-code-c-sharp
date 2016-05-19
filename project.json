@@ -17,7 +17,10 @@
         "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-*",
         "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-*",
         "Microsoft.AspNetCore.Server.Kestrel.Https": "1.0.0-*",
-        "Flurl.Http": "0.10.0"
+        "Microsoft.AspNetCore.Session": "1.0.0-*",
+        "Microsoft.Extensions.Caching.Memory": "1.0.0-*",
+        "Flurl.Http": "0.10.0",
+        "Newtonsoft.Json": "8.0.3"
     },
     "buildOptions": {
         "emitEntryPoint": true,

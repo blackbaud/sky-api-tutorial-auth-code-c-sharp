@@ -8,7 +8,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
         public static void RegisterRoutes(IRouteBuilder routes)
         {
             routes.MapRoute(
-                name: "Default",
+                name: "Home",
                 template: "{controller}/{action}",
                 defaults: new { controller = "Home", action = "Index" }
             );   
