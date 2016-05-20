@@ -13,30 +13,29 @@ namespace Blackbaud.AuthCodeFlowTutorial
     public class Startup
     {
         
-        //public IConfigurationRoot Configuration { get; set; }
+        public IConfiguration Configuration { get; }
         
         public Startup(IHostingEnvironment env) 
         {
-            // var builder = new ConfigurationBuilder()
-            //     .SetBasePath(env.ContentRootPath)
-            //     .AddJsonFile("appsettings.json")
-            //     .AddEnvironmentVariables();
-            // Configuration = builder.Build();
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json");
+            Configuration = builder.Build();
         }
-        
         
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.Configure<AppSettings>(Configuration.GetSection(nameof(AppSettings)));
+            services.AddOptions();
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
             
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
             
             services.AddSession(options => { 
-                    options.IdleTimeout = TimeSpan.FromMinutes(30); 
-                    options.CookieName = ".MyApplication";
-                });
+                options.IdleTimeout = TimeSpan.FromMinutes(30); 
+                options.CookieName = ".MyApplication";
+            });
                 
             services.AddMvc();
         }
