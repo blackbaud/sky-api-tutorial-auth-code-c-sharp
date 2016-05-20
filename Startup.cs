@@ -52,21 +52,9 @@ namespace Blackbaud.AuthCodeFlowTutorial
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            app.UseSession();
-            
-            app.Map("/session", subApp =>
-            {
-                subApp.Run(async context =>
-                {
-                    int visits = 0;
-                    visits = context.Session.GetInt32("visits") ?? 0;
-                    context.Session.SetInt32("visits", ++visits);
-                    string token = context.Session.GetString("token");
-                    await context.Response.WriteAsync("Counting: You have visited our page this many times: " + visits + "<br>Token: " + token);
-                });
-            });
-            
             loggerFactory.AddConsole();
+            
+            app.UseSession();
             app.UseDeveloperExceptionPage();
             app.UseStaticFiles();
             app.Use(ChangeContextToHttps);

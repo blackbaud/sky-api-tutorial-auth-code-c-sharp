@@ -30,7 +30,16 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
                     client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", 
                         "Bearer " + System.Text.Encoding.UTF8.GetString(token));
                     HttpResponseMessage response = client.GetAsync(id).Result;
-                    response.EnsureSuccessStatusCode();
+                    try {
+                        response.EnsureSuccessStatusCode();
+                    } catch (Exception) {
+                        // Refresh the token if expired.
+                        // AuthenticationController.FetchTokens(new Dictionary<string, string>(){
+                        //     { "grant_type", "refresh_token" },
+                        //     { "refresh_token", System.Text.Encoding.UTF8.GetString(refreshToken) }
+                        // });
+                    }
+                    
                     return response.Content.ReadAsStringAsync().Result;
                 }
                 else

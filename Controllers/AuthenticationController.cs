@@ -22,20 +22,24 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         [HttpGet("~/auth/authenticated")]
         public ActionResult Authenticated() 
         {
-            var token = new Byte[1];
-            bool tokenOK = HttpContext.Session.TryGetValue("token", out token);
+            var refreshToken = new Byte[1000];
+            bool tokenOK = HttpContext.Session.TryGetValue("refreshToken", out refreshToken);
             return Json(new { authenticated = tokenOK });
         }
         
         [HttpGet("~/auth/callback")]
         public ActionResult Callback() {
-            string token = FetchToken(Request.Query["code"]);
-            HttpContext.Session.Set("token", Encoding.UTF8.GetBytes(token));
+            var code = Request.Query["code"];
+            FetchTokens(new Dictionary<string, string>(){
+                { "code", code },
+                { "grant_type", "authorization_code" },
+                { "redirect_uri", _settings.Value.AuthRedirectUri }
+            });
             return Redirect("/");
         }
         
         [HttpGet("~/auth/login")]
-        public ActionResult Login() 
+        public ActionResult LogIn() 
         {
             return Redirect(_settings.Value.AuthBaseUri + "authorization" +
                 "?client_id=" + _settings.Value.AuthClientId +
@@ -44,8 +48,16 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
             );
         }
         
+        [HttpGet("~/auth/logout")]
+        public ActionResult LogOut() 
+        {
+            HttpContext.Session.Remove("token");
+            HttpContext.Session.Remove("refreshToken");
+            return Redirect("/");
+        }
+        
         [NonAction]
-        public string FetchToken(string code) 
+        public Dictionary<string, string> FetchTokens(Dictionary<string, string> requestBody) 
         {
             using (var client = new HttpClient()) 
             {
@@ -56,21 +68,18 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", 
                     "Basic " + Base64Encode(_settings.Value.AuthClientId + ":" + _settings.Value.AuthClientSecret));
                 
-                var body = new Dictionary<string, string>(){
-                    { "code", code },
-                    { "grant_type", "authorization_code" },
-                    { "redirect_uri", _settings.Value.AuthRedirectUri }
-                };
-                
                 HttpResponseMessage response = client.PostAsync("token", 
-                    new FormUrlEncodedContent(body)).Result;
+                    new FormUrlEncodedContent(requestBody)).Result;
                     
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = response.Content.ReadAsStringAsync().Result;
-                var attrs = JsonConvert.DeserializeObject<dynamic>(jsonString);
+                var attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
                 
-                return attrs.access_token;
+                HttpContext.Session.Set("token", Encoding.UTF8.GetBytes(attrs["access_token"]));
+                HttpContext.Session.Set("refreshToken", Encoding.UTF8.GetBytes(attrs["refresh_token"]));
+                
+                return attrs;
             }
         }
         
