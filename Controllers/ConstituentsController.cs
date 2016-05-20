@@ -1,12 +1,21 @@
 using System;
 using System.Net.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Blackbaud.AuthCodeFlowTutorial.Services;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers
 {
     [Route("api/[controller]")]
     public class ConstituentsController : Controller
     {
+        private readonly IOptions<AppSettings> _settings;
+        
+        public ConstituentsController(IOptions<AppSettings> settings) 
+        {
+            _settings = settings;
+        }
+        
         [HttpGet("{id}")]
         public dynamic Get(string id)
         {
@@ -16,8 +25,8 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
                 var tokenOK = HttpContext.Session.TryGetValue("token", out token);
                 if (tokenOK)
                 {
-                    client.BaseAddress = new Uri("https://api.sky.blackbaud.com/constituent/constituents/");
-                    client.DefaultRequestHeaders.Add("bb-api-subscription-key", "ea65aa631ee349c68839d2589611a0be");
+                    client.BaseAddress = new Uri(_settings.Value.SkyApiBaseUri + "constituent/constituents/");
+                    client.DefaultRequestHeaders.Add("bb-api-subscription-key", _settings.Value.AuthSubscriptionKey);
                     client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", 
                         "Bearer " + System.Text.Encoding.UTF8.GetString(token));
                     HttpResponseMessage response = client.GetAsync(id).Result;

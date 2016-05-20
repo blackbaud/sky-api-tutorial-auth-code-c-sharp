@@ -1,10 +1,10 @@
 {
     "AppSettings": {
         "AuthBaseUri": "https://oauth2.sky.blackbaud.com/",
-        "AuthClientId": "5079f009-4b13-4699-945c-3b584b265694",
-        "AuthClientSecret": "pPS8SS0dliufKJISqlgh3Cu7QTUCqdJfVUK95qiIZiU=",
+        "AuthClientId": "",
+        "AuthClientSecret": "",
         "AuthRedirectUri": "https://localhost:5000/auth/callback",
-        "AuthSubscriptionKey": "ea65aa631ee349c68839d2589611a0be",
+        "AuthSubscriptionKey": "",
         "SkyApiBaseUri": "https://api.sky.blackbaud.com/"
     }
 }

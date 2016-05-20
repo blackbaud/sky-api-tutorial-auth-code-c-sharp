@@ -5,11 +5,19 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
+using Blackbaud.AuthCodeFlowTutorial.Services;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
     
     public class AuthenticationController : Controller {
         
+        private readonly IOptions<AppSettings> _settings;
+        
+        public AuthenticationController(IOptions<AppSettings> settings) 
+        {
+            _settings = settings;
+        }
         
         [HttpGet("~/auth/authenticated")]
         public ActionResult Authenticated() 
@@ -19,7 +27,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
             return Json(new { authenticated = tokenOK });
         }
         
-        
         [HttpGet("~/auth/callback")]
         public ActionResult Callback() {
             string token = FetchToken(Request.Query["code"]);
@@ -27,34 +34,32 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
             return Redirect("/");
         }
         
-        
         [HttpGet("~/auth/login")]
         public ActionResult Login() 
         {
-            return Redirect("https://oauth2.sky.blackbaud.com/authorization?" +
-                "client_id=" + "5079f009-4b13-4699-945c-3b584b265694" +
+            return Redirect(_settings.Value.AuthBaseUri + "authorization" +
+                "?client_id=" + _settings.Value.AuthClientId +
                 "&response_type=code" + 
-                "&redirect_uri=" + "https://localhost:5000/auth/callback"
+                "&redirect_uri=" + _settings.Value.AuthRedirectUri
             );
         }
         
-        
         [NonAction]
-        static string FetchToken(string code) 
+        public string FetchToken(string code) 
         {
             using (var client = new HttpClient()) 
             {
-                client.BaseAddress = new Uri("https://oauth2.sky.blackbaud.com/");
+                client.BaseAddress = new Uri(_settings.Value.AuthBaseUri);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", 
-                    "Basic " + Base64Encode("5079f009-4b13-4699-945c-3b584b265694" + ":" + "pPS8SS0dliufKJISqlgh3Cu7QTUCqdJfVUK95qiIZiU="));
+                    "Basic " + Base64Encode(_settings.Value.AuthClientId + ":" + _settings.Value.AuthClientSecret));
                 
                 var body = new Dictionary<string, string>(){
                     { "code", code },
                     { "grant_type", "authorization_code" },
-                    { "redirect_uri", "https://localhost:5000/auth/callback" }
+                    { "redirect_uri", _settings.Value.AuthRedirectUri }
                 };
                 
                 HttpResponseMessage response = client.PostAsync("token", 
@@ -68,7 +73,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
                 return attrs.access_token;
             }
         }
-        
         
         [NonAction]
         public static string Base64Encode(string plainText) {

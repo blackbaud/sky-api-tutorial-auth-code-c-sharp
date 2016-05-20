@@ -70,7 +70,12 @@ namespace Blackbaud.AuthCodeFlowTutorial
             app.UseDeveloperExceptionPage();
             app.UseStaticFiles();
             app.Use(ChangeContextToHttps);
-            app.UseMvc(RouteConfig.RegisterRoutes);
+            app.UseMvc(routes =>
+                 routes.MapRoute(
+                    name: "Default",
+                    template: "{controller=Home}/{action=Index}"
+                )
+            );
         }
 
         public static void Main(string[] args)
@@ -83,7 +88,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
                     options.UseHttps("testCert.pfx", "testPassword");
                     options.UseConnectionLogging();
                 })
-                .UseUrls("https://*:5000")
+                .UseUrls("https://localhost:5000")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .Build();
