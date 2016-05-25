@@ -12,10 +12,17 @@ namespace Blackbaud.AuthCodeFlowTutorial
 {
     public class Startup
     {
+     
         
+        /// Stores app settings.
         public IConfiguration Configuration { get; }
         
-        public Startup(IHostingEnvironment env) 
+        
+        
+        /// <summary>
+        /// Injects app settings from a JSON file.
+        /// </summary>
+        public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -23,23 +30,37 @@ namespace Blackbaud.AuthCodeFlowTutorial
             Configuration = builder.Build();
         }
         
-        // This method gets called by the runtime. Use this method to add services to the container.
+        
+        /// <summary>
+        /// Adds services to the container.
+        /// </summary>
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configure app settings so we can inject it into other classes.
             services.AddOptions();
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
             
+            // Configure the session.
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
-            
             services.AddSession(options => { 
                 options.IdleTimeout = TimeSpan.FromMinutes(30); 
                 options.CookieName = ".MyApplication";
             });
-                
+            
             services.AddMvc();
+            
+            // Include our authentication service.
+            services.AddSingleton<IAuthenticationService, AuthenticationService>();
+            
+            // Let the HTTP context be injected into non-constructors.
+            services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();
         }
         
+        
+        /// <summary>
+        /// Forces SSL.
+        /// </summary>
         private static RequestDelegate ChangeContextToHttps(RequestDelegate next)
         {
             return async context =>
@@ -49,11 +70,13 @@ namespace Blackbaud.AuthCodeFlowTutorial
             };
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
+        /// <summary>
+        /// Configures the HTTP request pipeline.
+        /// </summary>
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole();
-            
             app.UseSession();
             app.UseDeveloperExceptionPage();
             app.UseStaticFiles();
@@ -66,9 +89,13 @@ namespace Blackbaud.AuthCodeFlowTutorial
             );
         }
 
+
+        /// <summary>
+        /// Initializes the server and app.
+        /// </summary>
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            IWebHost host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
                     options.ThreadCount = 4;
@@ -80,7 +107,6 @@ namespace Blackbaud.AuthCodeFlowTutorial
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .Build();
-
             host.Run();
         }
     }

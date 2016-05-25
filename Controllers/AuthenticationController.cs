@@ -1,4 +1,5 @@
 using System;
+using Microsoft.CSharp.RuntimeBinder;
 using System.Text;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -10,83 +11,95 @@ using Blackbaud.AuthCodeFlowTutorial.Services;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
     
+    
+    
     public class AuthenticationController : Controller {
         
-        private readonly IOptions<AppSettings> _settings;
         
-        public AuthenticationController(IOptions<AppSettings> settings) 
+        
+        private readonly IOptions<AppSettings> AppSettings;
+        private readonly IAuthenticationService AuthService;
+        
+        
+        
+        /// <summary>
+        /// Initializer for controller.
+        /// </summary>
+        public AuthenticationController(IOptions<AppSettings> AppSettings, IAuthenticationService AuthService) 
         {
-            _settings = settings;
+            this.AppSettings = AppSettings;
+            this.AuthService = AuthService;
         }
         
+        
+        
+        /// <summary>
+        /// Returns a JSON response determining session's authenticated status.
+        /// </summary>
         [HttpGet("~/auth/authenticated")]
-        public ActionResult Authenticated() 
+        public ActionResult Authenticated()
         {
-            var refreshToken = new Byte[1000];
-            bool tokenOK = HttpContext.Session.TryGetValue("refreshToken", out refreshToken);
-            return Json(new { authenticated = tokenOK });
-        }
-        
-        [HttpGet("~/auth/callback")]
-        public ActionResult Callback() {
-            var code = Request.Query["code"];
-            FetchTokens(new Dictionary<string, string>(){
-                { "code", code },
-                { "grant_type", "authorization_code" },
-                { "redirect_uri", _settings.Value.AuthRedirectUri }
+            return Json(new { 
+                authenticated = AuthService.IsAuthenticated()
             });
+        }
+        
+        
+        
+        /// <summary>
+        /// Fetches auth tokens (using auth code from request body) and redirects to Home Page.
+        /// </summary>
+        [HttpGet("~/auth/callback")]
+        public ActionResult Callback() 
+        {
+            string code = Request.Query["code"];
+            AuthService.GetAccessToken(code);
             return Redirect("/");
         }
         
+        
+        
+        /// <summary>
+        /// Redirects user to authorization endpoint.
+        /// </summary>
         [HttpGet("~/auth/login")]
-        public ActionResult LogIn() 
+        public ActionResult LogIn()
         {
-            return Redirect(_settings.Value.AuthBaseUri + "authorization" +
-                "?client_id=" + _settings.Value.AuthClientId +
-                "&response_type=code" + 
-                "&redirect_uri=" + _settings.Value.AuthRedirectUri
-            );
+            Uri address = AuthService.GetAuthorizationUri();
+            return Redirect(address.ToString());
         }
         
+        
+        
+        /// <summary>
+        /// Destroys the authenticated session and redirects to Home Page.
+        /// </summary>
         [HttpGet("~/auth/logout")]
-        public ActionResult LogOut() 
+        public ActionResult LogOut()
         {
-            HttpContext.Session.Remove("token");
-            HttpContext.Session.Remove("refreshToken");
+            AuthService.LogOut();
             return Redirect("/");
         }
         
-        [NonAction]
-        public Dictionary<string, string> FetchTokens(Dictionary<string, string> requestBody) 
-        {
-            using (var client = new HttpClient()) 
-            {
-                client.BaseAddress = new Uri(_settings.Value.AuthBaseUri);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", 
-                    "Basic " + Base64Encode(_settings.Value.AuthClientId + ":" + _settings.Value.AuthClientSecret));
-                
-                HttpResponseMessage response = client.PostAsync("token", 
-                    new FormUrlEncodedContent(requestBody)).Result;
-                    
-                response.EnsureSuccessStatusCode();
-
-                var jsonString = response.Content.ReadAsStringAsync().Result;
-                var attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                
-                HttpContext.Session.Set("token", Encoding.UTF8.GetBytes(attrs["access_token"]));
-                HttpContext.Session.Set("refreshToken", Encoding.UTF8.GetBytes(attrs["refresh_token"]));
-                
-                return attrs;
-            }
-        }
         
-        [NonAction]
-        public static string Base64Encode(string plainText) {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes);
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        [HttpGet("~/auth/refresh-token")]
+        public ActionResult RefreshToken()
+        {
+            dynamic result = AuthService.RefreshTokens();
+            Console.WriteLine("Refresh Token/ Result: ", result);
+            try
+            {
+                string error = result.error;
+                return RedirectToAction("LogIn");
+            }
+            catch (RuntimeBinderException)
+            {
+                return Json(result);
+            } 
         }
     }
 }
