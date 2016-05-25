@@ -11,14 +11,14 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
     public class AuthenticationService : IAuthenticationService
     {   
         
-        private readonly IOptions<AppSettings> appSettings;
-        private readonly HttpContext context;
+        private readonly IOptions<AppSettings> AppSettings;
+        private readonly HttpContext Context;
 
         
         public AuthenticationService(IOptions<AppSettings> AppSettings, IHttpContextAccessor contextAccessor)
         {
-            this.appSettings = AppSettings;
-            context = contextAccessor.HttpContext;
+            this.AppSettings = AppSettings;
+            Context = contextAccessor.HttpContext;
         }
         
         
@@ -34,14 +34,14 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             {   
                 // Build token endpoint URL.
                 string url = new Uri(
-                    new Uri(appSettings.Value.AuthBaseUri), "token").ToString();
+                    new Uri(AppSettings.Value.AuthBaseUri), "token").ToString();
                 
                 // Set request headers.
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
                 client.DefaultRequestHeaders.TryAddWithoutValidation(
-                    "Authorization", "Basic " + Base64Encode(appSettings.Value.AuthClientId + ":" + appSettings.Value.AuthClientSecret));
+                    "Authorization", "Basic " + Base64Encode(AppSettings.Value.AuthClientId + ":" + AppSettings.Value.AuthClientSecret));
                 
                 // Fetch tokens from auth server.
                 HttpResponseMessage response = client.PostAsync(url, 
@@ -52,8 +52,8 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
                 {
                     string jsonString = response.Content.ReadAsStringAsync().Result;
                     Dictionary<string, string> attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                    context.Session.SetString("token", attrs["access_token"]);
-                    context.Session.SetString("refreshToken", attrs["refresh_token"]);
+                    Context.Session.SetString("token", attrs["access_token"]);
+                    Context.Session.SetString("refreshToken", attrs["refresh_token"]);
                 }
                 
                 return response;
@@ -70,7 +70,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             return FetchTokens(new Dictionary<string, string>(){
                 { "code", code },
                 { "grant_type", "authorization_code" },
-                { "redirect_uri", appSettings.Value.AuthRedirectUri }
+                { "redirect_uri", AppSettings.Value.AuthRedirectUri }
             });
         }
         
@@ -82,7 +82,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         {
             return FetchTokens(new Dictionary<string, string>(){
                 { "grant_type", "refresh_token" },
-                { "refresh_token", context.Session.GetString("refreshToken") }
+                { "refresh_token", Context.Session.GetString("refreshToken") }
             });
         }
         
@@ -93,10 +93,10 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         public Uri GetAuthorizationUri()
         {
             return new Uri(
-                new Uri(appSettings.Value.AuthBaseUri), "authorization" +
-                "?client_id=" + appSettings.Value.AuthClientId +
+                new Uri(AppSettings.Value.AuthBaseUri), "authorization" +
+                "?client_id=" + AppSettings.Value.AuthClientId +
                 "&response_type=code" + 
-                "&redirect_uri=" + appSettings.Value.AuthRedirectUri
+                "&redirect_uri=" + AppSettings.Value.AuthRedirectUri
             );
         }
         
@@ -109,7 +109,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             try
             {
                 byte[] token = new Byte[1];
-                return context.Session.TryGetValue("token", out token);
+                return Context.Session.TryGetValue("token", out token);
             }
             catch (InvalidOperationException)
             {
@@ -124,8 +124,8 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public void LogOut()
         {
-            context.Session.Remove("token");
-            context.Session.Remove("refreshToken");
+            Context.Session.Remove("token");
+            Context.Session.Remove("refreshToken");
         }
         
         
