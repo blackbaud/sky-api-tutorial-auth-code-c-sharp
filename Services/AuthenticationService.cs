@@ -22,7 +22,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         }
         
         
-        
         /// <summary>
         /// Fetches access/refresh tokens from the provider.
         /// <param name="requestBody">Key-value attributes to be sent with the request.</param>

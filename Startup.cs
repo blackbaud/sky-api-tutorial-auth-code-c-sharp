@@ -12,11 +12,9 @@ namespace Blackbaud.AuthCodeFlowTutorial
 {
     public class Startup
     {
-     
         
         /// Stores app settings.
         public IConfiguration Configuration { get; }
-        
         
         
         /// <summary>

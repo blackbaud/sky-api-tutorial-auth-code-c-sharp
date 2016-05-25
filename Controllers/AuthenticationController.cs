@@ -8,14 +8,11 @@ using Blackbaud.AuthCodeFlowTutorial.Services;
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
     
     
-    
     public class AuthenticationController : Controller {
-        
-        
+            
         
         private readonly IOptions<AppSettings> AppSettings;
         private readonly IAuthenticationService AuthService;
-        
         
         
         /// <summary>
@@ -28,7 +25,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         }
         
         
-        
         /// <summary>
         /// Returns a JSON response determining session's authenticated status.
         /// </summary>
@@ -39,8 +35,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
                 authenticated = AuthService.IsAuthenticated()
             });
         }
-        
-        
+                
         
         /// <summary>
         /// Fetches access token (using auth code from request body) and redirects to Home Page.
@@ -54,7 +49,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         }
         
         
-        
         /// <summary>
         /// Redirects user to authorization endpoint.
         /// </summary>
@@ -66,7 +60,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         }
         
         
-        
         /// <summary>
         /// Destroys the authenticated session and redirects to Home Page.
         /// </summary>
@@ -76,7 +69,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
             AuthService.LogOut();
             return Redirect("/");
         }
-        
         
         
         /// <summary>
