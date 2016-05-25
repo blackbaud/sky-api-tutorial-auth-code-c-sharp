@@ -1,6 +1,5 @@
 using System;
 using System.Net.Http;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -13,15 +12,10 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
     public class ConstituentsController : Controller
     {
         
-        
-        
         private readonly IOptions<AppSettings> AppSettings;
         private readonly IAuthenticationService AuthService;
         
         
-        
-        /// <summary>
-        /// </summary>
         public ConstituentsController(IOptions<AppSettings> AppSettings, IAuthenticationService AuthService) 
         {
             this.AppSettings = AppSettings;
@@ -29,81 +23,60 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         }
         
         
-        
         /// <summary>
+        /// Returns a constituent record from a provided ID.
         /// </summary>
         [HttpGet("{id}")]
-        public dynamic Get(string id)
+        public ActionResult Get(string id)
         {
             using (HttpClient client = new HttpClient())
             {
                 byte[] token = new Byte[700];
-                //byte[] refreshToken = new Byte[700];
                 bool tokenOkay = HttpContext.Session.TryGetValue("token", out token);
-                //bool refreshTokenOkay = HttpContext.Session.TryGetValue("refreshtoken", out refreshToken);
                 
                 if (tokenOkay)
                 {
-                    // Constituent endpoint
+                    // Set constituent endpoint.
                     client.BaseAddress = new Uri(
-                        new Uri(AppSettings.Value.SkyApiBaseUri),
-                        "constituent/constituents/");
+                        new Uri(AppSettings.Value.SkyApiBaseUri), "constituent/constituents/");
                     
                     // Set request headers.
                     client.DefaultRequestHeaders.Add(
-                        "bb-api-subscription-key", 
-                        AppSettings.Value.AuthSubscriptionKey);
+                        "bb-api-subscription-key", AppSettings.Value.AuthSubscriptionKey);
                     client.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "Authorization", 
-                        "Bearer " + System.Text.Encoding.UTF8.GetString(token));
+                        "Authorization", "Bearer " + System.Text.Encoding.UTF8.GetString(token));
                     
                     // Make the request to constituent API.
                     HttpResponseMessage response = client.GetAsync(id).Result;
                     string jsonString = response.Content.ReadAsStringAsync().Result;
-                    dynamic result = new {};
-                    
-                    Console.WriteLine("RESPONSE: " + jsonString);
-                    Console.WriteLine("RESPONSE CODE: " + (int) response.StatusCode);
-                    
                     int statusCode = (int) response.StatusCode;
-                    switch (statusCode)
+                    
+                    // The access token has expired or is invalid. Request a new one and try again.
+                    if (statusCode == 401)
                     {
-                        // API Call is successful.
-                        case 200:
-                        break;
+                        HttpResponseMessage tokenResponse = AuthService.RefreshAccessToken();
                         
-                        // Constituent ID is not valid type.
-                        case 400:
-                        Console.WriteLine("[ERROR] Constituent ID, " + id + ", is not in the appropriate format.");
-                        break;
+                        // The token was refreshed successfully.
+                        // Attempt to access the API again.
+                        if (tokenResponse.IsSuccessStatusCode) 
+                        {
+                            response = client.GetAsync(id).Result;
+                            jsonString = response.Content.ReadAsStringAsync().Result;
+                        }
                         
-                        // Token has expired or is invalid. Request a new one.
-                        case 401:
-                        //AuthService.RefreshTokens();
-                        Console.WriteLine("[ERROR] Token has expired.");
-                        break;
-                        
-                        // Constituent record not found.
-                        case 404:
-                        Console.WriteLine("[ERROR] Constituent record not found.");
-                        break;
+                        // The token cannot be refreshed.
+                        // Redirect to the auth login page.
+                        else
+                        {
+                            return RedirectToAction("LogIn", "Authentication");
+                        }
                     }
-                        
-                    return JsonConvert.DeserializeObject<dynamic>(jsonString); 
-                        
-                        // var attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                        // AuthenticationController.FetchTokens(new Dictionary<string, string>(){
-                        //     { "grant_type", "refresh_token" },
-                        //     { "refresh_token", System.Text.Encoding.UTF8.GetString(refreshToken) }
-                        // });
-                    
-                    
+
+                    return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
                 }
                 else
                 {
-                    return new { 
-                        error = "Authentication token is invalid or could not found." 
-                    };
+                    return RedirectToAction("LogIn", "Authentication");
                 }
             }
         }

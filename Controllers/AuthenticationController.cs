@@ -1,9 +1,5 @@
 using System;
-using Microsoft.CSharp.RuntimeBinder;
-using System.Text;
-using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
@@ -47,13 +43,13 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         
         
         /// <summary>
-        /// Fetches auth tokens (using auth code from request body) and redirects to Home Page.
+        /// Fetches access token (using auth code from request body) and redirects to Home Page.
         /// </summary>
         [HttpGet("~/auth/callback")]
-        public ActionResult Callback() 
+        public ActionResult Callback()
         {
             string code = Request.Query["code"];
-            AuthService.GetAccessToken(code);
+            AuthService.ExchangeCodeForAccessToken(code);
             return Redirect("/");
         }
         
@@ -89,17 +85,9 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         [HttpGet("~/auth/refresh-token")]
         public ActionResult RefreshToken()
         {
-            dynamic result = AuthService.RefreshTokens();
-            Console.WriteLine("Refresh Token/ Result: ", result);
-            try
-            {
-                string error = result.error;
-                return RedirectToAction("LogIn");
-            }
-            catch (RuntimeBinderException)
-            {
-                return Json(result);
-            } 
+            HttpResponseMessage response = AuthService.RefreshAccessToken();
+            string jsonString = response.Content.ReadAsStringAsync().Result;
+            return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
         }
     }
 }

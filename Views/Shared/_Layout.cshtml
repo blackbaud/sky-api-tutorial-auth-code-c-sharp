@@ -77,7 +77,14 @@
             </tbody>
           </table>
         </div>
-        <a href="/auth/logout" class="btn btn-primary">Log out</a>
+        <p>
+          <a href="/auth/logout" class="btn btn-primary">Log out</a>
+          <button ng-click="refreshToken()" class="btn btn-primary">Refresh Access Token</button>
+        </p>
+        <div ng-if="tokenResponse">
+          <h4>Token Response:</h4>
+          <pre ng-bind="tokenResponse | json"></pre>
+        </div>
       </div>
     </div>
 
@@ -112,6 +119,13 @@
                           $scope.isReady = true;
                       });
                   });
+                  
+                  // Manually refresh access token.
+                  $scope.refreshToken = function () {
+                      $http.get('/auth/refresh-token').then(function (res) {
+                          $scope.tokenResponse = res.data;
+                      });
+                  };
               });
       })(window.angular);
   </script>

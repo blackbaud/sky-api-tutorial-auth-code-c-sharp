@@ -1,14 +1,15 @@
 using System;
+using System.Net.Http;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
     public interface IAuthenticationService
     {   
-        void GetAccessToken(string code);
+        HttpResponseMessage ExchangeCodeForAccessToken(string code);
         Uri GetAuthorizationUri();
         bool IsAuthenticated();
         void LogOut();
-        dynamic RefreshTokens();
+        HttpResponseMessage RefreshAccessToken();
         
     }
 }
