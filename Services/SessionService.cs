@@ -12,17 +12,15 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
     /// </summary>
     public class SessionService : ISessionService
     {
-        private readonly string _accessTokenName;
+        private const string ACCESS_TOKEN_NAME = "token";
+        private const string REFRESH_TOKEN_NAME = "refreshToken";
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string _refreshTokenName;
         private ISession _session;
         
         public SessionService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
             _session = _httpContextAccessor.HttpContext.Session;
-            _accessTokenName = "token";
-            _refreshTokenName = "refreshToken";
         }
         
         
@@ -33,8 +31,8 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         {
             try 
             {
-                _session.Remove(_accessTokenName);
-                _session.Remove(_refreshTokenName);
+                _session.Remove(ACCESS_TOKEN_NAME);
+                _session.Remove(REFRESH_TOKEN_NAME);
             }
             catch (Exception error)
             {
@@ -48,7 +46,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public string GetAccessToken()
         {
-            return TryGetString(_accessTokenName);
+            return TryGetString(ACCESS_TOKEN_NAME);
         }
         
         
@@ -57,7 +55,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public string GetRefreshToken()
         {
-            return TryGetString(_refreshTokenName);
+            return TryGetString(REFRESH_TOKEN_NAME);
         }
         
         
@@ -70,8 +68,8 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             {
                 string jsonString = response.Content.ReadAsStringAsync().Result;
                 Dictionary<string, string> attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                _session.SetString(_accessTokenName, attrs["access_token"]);
-                _session.SetString(_refreshTokenName, attrs["refresh_token"]);
+                _session.SetString(ACCESS_TOKEN_NAME, attrs["access_token"]);
+                _session.SetString(REFRESH_TOKEN_NAME, attrs["refresh_token"]);
             }
         }
         
@@ -87,10 +85,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             {
                 return System.Text.Encoding.UTF8.GetString(valueBytes);
             }
-            else
-            {
-                return "";
-            }
+            return null;
         }
     }
 }

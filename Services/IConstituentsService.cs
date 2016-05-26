@@ -4,7 +4,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
     public interface IConstituentsService
     {   
-        HttpResponseMessage GetConstituent(string endpoint);
+        HttpResponseMessage GetConstituent(string id);
         HttpResponseMessage GetConstituents();
     }
 }

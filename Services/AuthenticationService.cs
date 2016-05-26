@@ -97,7 +97,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public bool IsAuthenticated()
         {
-            return (_sessionService.GetAccessToken().Length > 0);
+            return (_sessionService.GetAccessToken() != null);
         }
         
         

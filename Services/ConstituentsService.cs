@@ -60,12 +60,12 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
                 {
                     default:
                     case "get":
-                    response = client.GetAsync(endpoint).Result;
-                    break;
+                        response = client.GetAsync(endpoint).Result;
+                        break;
                     
                     case "post":
-                    response = client.PostAsync(endpoint, content).Result;
-                    break;
+                        response = client.PostAsync(endpoint, content).Result;
+                        break;
                 }
                 
                 return response;
