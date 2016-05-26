@@ -42,7 +42,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
             services.AddSession(options => { 
-                options.IdleTimeout = TimeSpan.FromMinutes(30); 
+                options.IdleTimeout = TimeSpan.FromMinutes(1); 
                 options.CookieName = ".MyApplication";
             });
             
@@ -50,6 +50,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ISessionService, SessionService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
+            services.AddSingleton<IConstituentsService, ConstituentsService>();
             
             // Add MVC.
             services.AddMvc();
