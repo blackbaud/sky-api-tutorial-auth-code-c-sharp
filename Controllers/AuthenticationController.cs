@@ -1,14 +1,20 @@
 using System;
 using System.Net.Http;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Microsoft.Extensions.Options;
 using Blackbaud.AuthCodeFlowTutorial.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
-namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
+namespace Blackbaud.AuthCodeFlowTutorial.Controllers 
+{
     
     
-    public class AuthenticationController : Controller {
+    /// <summary>
+    /// Contains endpoints that interact with the authorization provider.
+    /// </summary>
+    [Route("auth")]
+    public class AuthenticationController : Controller 
+    {
             
         
         private readonly IOptions<AppSettings> AppSettings;
@@ -28,7 +34,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         /// <summary>
         /// Returns a JSON response determining session's authenticated status.
         /// </summary>
-        [HttpGet("~/auth/authenticated")]
+        [HttpGet("authenticated")]
         public ActionResult Authenticated()
         {
             return Json(new { 
@@ -40,7 +46,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         /// <summary>
         /// Fetches access token (using auth code from request body) and redirects to Home Page.
         /// </summary>
-        [HttpGet("~/auth/callback")]
+        [HttpGet("callback")]
         public ActionResult Callback()
         {
             string code = Request.Query["code"];
@@ -52,7 +58,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         /// <summary>
         /// Redirects user to authorization endpoint.
         /// </summary>
-        [HttpGet("~/auth/login")]
+        [HttpGet("login")]
         public ActionResult LogIn()
         {
             Uri address = AuthService.GetAuthorizationUri();
@@ -63,7 +69,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         /// <summary>
         /// Destroys the authenticated session and redirects to Home Page.
         /// </summary>
-        [HttpGet("~/auth/logout")]
+        [HttpGet("logout")]
         public ActionResult LogOut()
         {
             AuthService.LogOut();
@@ -72,9 +78,9 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers {
         
         
         /// <summary>
-        /// 
+        /// Deliberately makes a call to the auth provider to refresh access token.
         /// </summary>
-        [HttpGet("~/auth/refresh-token")]
+        [HttpGet("refresh-token")]
         public ActionResult RefreshToken()
         {
             HttpResponseMessage response = AuthService.RefreshAccessToken();

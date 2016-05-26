@@ -2,23 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
+    
+    /// <summary>
+    /// Contains business logic and helper methods that interact with the authentication provider.
+    /// </summary>
     public class AuthenticationService : IAuthenticationService
     {   
         
-        private readonly IOptions<AppSettings> AppSettings;
-        private readonly HttpContext Context;
+        private readonly IOptions<AppSettings> _appSettings;
+        private ISessionService _sessionService;
 
         
-        public AuthenticationService(IOptions<AppSettings> AppSettings, IHttpContextAccessor contextAccessor)
+        public AuthenticationService(IOptions<AppSettings> appSettings, ISessionService sessionService)
         {
-            this.AppSettings = AppSettings;
-            Context = contextAccessor.HttpContext;
+            _appSettings = appSettings;
+            _sessionService = sessionService;
         }
         
         
@@ -32,28 +34,19 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             using (HttpClient client = new HttpClient()) 
             {   
                 // Build token endpoint URL.
-                string url = new Uri(
-                    new Uri(AppSettings.Value.AuthBaseUri), "token").ToString();
+                string url = new Uri(new Uri(_appSettings.Value.AuthBaseUri), "token").ToString();
                 
                 // Set request headers.
                 client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
                 client.DefaultRequestHeaders.TryAddWithoutValidation(
-                    "Authorization", "Basic " + Base64Encode(AppSettings.Value.AuthClientId + ":" + AppSettings.Value.AuthClientSecret));
+                    "Authorization", "Basic " + Base64Encode(_appSettings.Value.AuthClientId + ":" + _appSettings.Value.AuthClientSecret));
                 
                 // Fetch tokens from auth server.
-                HttpResponseMessage response = client.PostAsync(url, 
-                    new FormUrlEncodedContent(requestBody)).Result;
+                HttpResponseMessage response = client.PostAsync(url, new FormUrlEncodedContent(requestBody)).Result;
                 
                 // Save the access/refresh tokens in the Session.
-                if (response.IsSuccessStatusCode)
-                {
-                    string jsonString = response.Content.ReadAsStringAsync().Result;
-                    Dictionary<string, string> attrs = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                    Context.Session.SetString("token", attrs["access_token"]);
-                    Context.Session.SetString("refreshToken", attrs["refresh_token"]);
-                }
+                _sessionService.SetTokens(response);
                 
                 return response;
             }
@@ -69,7 +62,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             return FetchTokens(new Dictionary<string, string>(){
                 { "code", code },
                 { "grant_type", "authorization_code" },
-                { "redirect_uri", AppSettings.Value.AuthRedirectUri }
+                { "redirect_uri", _appSettings.Value.AuthRedirectUri }
             });
         }
         
@@ -81,7 +74,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         {
             return FetchTokens(new Dictionary<string, string>(){
                 { "grant_type", "refresh_token" },
-                { "refresh_token", Context.Session.GetString("refreshToken") }
+                { "refresh_token", _sessionService.GetRefreshToken() }
             });
         }
         
@@ -92,10 +85,10 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         public Uri GetAuthorizationUri()
         {
             return new Uri(
-                new Uri(AppSettings.Value.AuthBaseUri), "authorization" +
-                "?client_id=" + AppSettings.Value.AuthClientId +
+                new Uri(_appSettings.Value.AuthBaseUri), "authorization" +
+                "?client_id=" + _appSettings.Value.AuthClientId +
                 "&response_type=code" + 
-                "&redirect_uri=" + AppSettings.Value.AuthRedirectUri
+                "&redirect_uri=" + _appSettings.Value.AuthRedirectUri
             );
         }
         
@@ -105,16 +98,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public bool IsAuthenticated()
         {
-            try
-            {
-                byte[] token = new Byte[1];
-                return Context.Session.TryGetValue("token", out token);
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
-            
+            return (_sessionService.GetAccessToken().Length > 0);
         }
         
         
@@ -123,8 +107,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         /// </summary>
         public void LogOut()
         {
-            Context.Session.Remove("token");
-            Context.Session.Remove("refreshToken");
+            _sessionService.ClearTokens();
         }
         
         

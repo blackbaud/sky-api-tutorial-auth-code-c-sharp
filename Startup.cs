@@ -1,12 +1,12 @@
 using System;
 using System.IO;
+using Blackbaud.AuthCodeFlowTutorial.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Blackbaud.AuthCodeFlowTutorial.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Blackbaud.AuthCodeFlowTutorial
 {
@@ -38,7 +38,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
             services.AddOptions();
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
             
-            // Configure the session.
+            // Configure session.
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
             services.AddSession(options => { 
@@ -46,13 +46,13 @@ namespace Blackbaud.AuthCodeFlowTutorial
                 options.CookieName = ".MyApplication";
             });
             
-            services.AddMvc();
-            
-            // Include our authentication service.
+            // Services to be injected.
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<ISessionService, SessionService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             
-            // Let the HTTP context be injected into non-constructors.
-            services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();
+            // Add MVC.
+            services.AddMvc();
         }
         
         
@@ -85,6 +85,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
                     template: "{controller=Home}/{action=Index}"
                 )
             );
+            
         }
 
 

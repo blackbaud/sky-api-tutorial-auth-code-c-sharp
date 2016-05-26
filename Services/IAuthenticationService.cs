@@ -10,6 +10,5 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         bool IsAuthenticated();
         void LogOut();
         HttpResponseMessage RefreshAccessToken();
-        
     }
 }

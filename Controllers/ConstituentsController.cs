@@ -1,25 +1,31 @@
 using System;
 using System.Net.Http;
+using Blackbaud.AuthCodeFlowTutorial.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Blackbaud.AuthCodeFlowTutorial.Services;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers
 {
     
+    
+    /// <summary>
+    /// Contains endpoints that interact with SKY API (constituents).
+    /// </summary>
     [Route("api/[controller]")]
     public class ConstituentsController : Controller
     {
         
-        private readonly IOptions<AppSettings> AppSettings;
-        private readonly IAuthenticationService AuthService;
+        private readonly IOptions<AppSettings> _appSettings;
+        private readonly IAuthenticationService _authService;
+        private readonly ISessionService _sessionService;
         
         
-        public ConstituentsController(IOptions<AppSettings> AppSettings, IAuthenticationService AuthService) 
+        public ConstituentsController(IOptions<AppSettings> appSettings, IAuthenticationService authService, ISessionService sessionService) 
         {
-            this.AppSettings = AppSettings;
-            this.AuthService = AuthService;
+            _appSettings = appSettings;
+            _authService = authService;
+            _sessionService = sessionService;
         }
         
         
@@ -31,20 +37,19 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         {
             using (HttpClient client = new HttpClient())
             {
-                byte[] token = new Byte[700];
-                bool tokenOkay = HttpContext.Session.TryGetValue("token", out token);
+                string token = _sessionService.GetAccessToken();
                 
-                if (tokenOkay)
+                if (token.Length > 0)
                 {
                     // Set constituent endpoint.
                     client.BaseAddress = new Uri(
-                        new Uri(AppSettings.Value.SkyApiBaseUri), "constituent/constituents/");
+                        new Uri(_appSettings.Value.SkyApiBaseUri), "constituent/constituents/");
                     
                     // Set request headers.
                     client.DefaultRequestHeaders.Add(
-                        "bb-api-subscription-key", AppSettings.Value.AuthSubscriptionKey);
+                        "bb-api-subscription-key", _appSettings.Value.AuthSubscriptionKey);
                     client.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "Authorization", "Bearer " + System.Text.Encoding.UTF8.GetString(token));
+                        "Authorization", "Bearer " + token);
                     
                     // Make the request to constituent API.
                     HttpResponseMessage response = client.GetAsync(id).Result;
@@ -54,7 +59,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
                     // The access token has expired or is invalid. Request a new one and try again.
                     if (statusCode == 401)
                     {
-                        HttpResponseMessage tokenResponse = AuthService.RefreshAccessToken();
+                        HttpResponseMessage tokenResponse = _authService.RefreshAccessToken();
                         
                         // The token was refreshed successfully.
                         // Attempt to access the API again.

@@ -1,5 +1,9 @@
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
+    
+    /// <summary>
+    /// Stores app-wide configuration properties, mapped to appsettings.json.
+    /// </summary>
     public class AppSettings
     {
         public string AuthBaseUri { get; set; }
