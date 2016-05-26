@@ -1,8 +1,6 @@
-using System;
 using System.Net.Http;
 using Blackbaud.AuthCodeFlowTutorial.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers
@@ -14,21 +12,11 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
     [Route("api/[controller]")]
     public class ConstituentsController : Controller
     {
-        
-        private readonly IOptions<AppSettings> _appSettings;
-        private readonly IAuthenticationService _authService;
+
         private readonly IConstituentsService _constituentsService;
-        private readonly ISessionService _sessionService;
         
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        public ConstituentsController(IOptions<AppSettings> appSettings, IAuthenticationService authService, ISessionService sessionService, IConstituentsService constituentsService) 
+        public ConstituentsController(IConstituentsService constituentsService) 
         {
-            _appSettings = appSettings;
-            _authService = authService;
-            _sessionService = sessionService;
             _constituentsService = constituentsService;
         }
         
@@ -39,16 +27,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         [HttpGet("constituents")]
         public ActionResult GetList()
         {
-            HttpResponseMessage response = _constituentsService.GetConstituents();
-            if (response.IsSuccessStatusCode)
-            {
-                string jsonString = response.Content.ReadAsStringAsync().Result;
-                return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
-            }
-            else
-            {
-                return RedirectToAction("LogIn", "Authentication");
-            }
+            return RequireAuth(_constituentsService.GetConstituents());
         }
         
         
@@ -58,16 +37,21 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         [HttpGet("{id}")]
         public ActionResult GetById(string id)
         {
-            HttpResponseMessage response = _constituentsService.GetConstituent(id);
-            if (response.IsSuccessStatusCode) 
-            {
-                string jsonString = response.Content.ReadAsStringAsync().Result;
-                return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
-            }
-            else
+            return RequireAuth(_constituentsService.GetConstituent(id));
+        }
+        
+        
+        /// <summary>
+        /// Redirects to Log In if response returns a 401.
+        /// </summary>
+        private ActionResult RequireAuth(HttpResponseMessage response)
+        {
+            if ((int) response.StatusCode == 401)
             {
                 return RedirectToAction("LogIn", "Authentication");
             }
+            string jsonString = response.Content.ReadAsStringAsync().Result;
+            return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
         }
     }
 }

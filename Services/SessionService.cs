@@ -8,7 +8,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
     
     /// <summary>
-    /// 
+    /// Sets, gets, and destroys session variables.
     /// </summary>
     public class SessionService : ISessionService
     {
@@ -16,7 +16,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _refreshTokenName;
         private ISession _session;
-        
         
         public SessionService(IHttpContextAccessor httpContextAccessor)
         {
@@ -28,7 +27,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Destroys access and refresh tokens from the session.
         /// </summary>
         public void ClearTokens()
         {
@@ -63,7 +62,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Sets the access and refresh tokens based on an HTTP response.
         /// </summary>
         public void SetTokens(HttpResponseMessage response)
         {
@@ -78,7 +77,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// Return session value as string, if exists, or an empty string.
+        /// Return session value as a string (if it exists), or an empty string.
         /// </summary>
         private string TryGetString(string name)
         {

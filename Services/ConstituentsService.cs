@@ -1,18 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
     
-    
     /// <summary>
-    /// 
+    /// Interacts directly with SKY API Constituent endpoints.
     /// </summary>
     public class ConstituentsService : IConstituentsService
     {
@@ -21,7 +15,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         private readonly IOptions<AppSettings> _appSettings;
         private readonly ISessionService _sessionService;
         private readonly IAuthenticationService _authService;
-        
         
         public ConstituentsService(IOptions<AppSettings> appSettings, ISessionService sessionService, IAuthenticationService authService)
         {
@@ -33,7 +26,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Requests that the auth service refresh the access token and returns true if successful.
         /// </summary>
         private bool TryRefreshToken()
         {
@@ -43,7 +36,10 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Performs HTTP requests (POST/GET) and returns the response.
+        /// <param name="method" type="String">The HTTP method, post, get</param>
+        /// <param name="endpoint" type="String">The API endpoint</param>
+        /// <param name="content" type="HttpContent">The request body content</param>
         /// </summary>
         private HttpResponseMessage Proxy(string method, string endpoint, StringContent content = null)
         {
@@ -78,7 +74,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Returns a response containing a constituent record (from an ID).
         /// </summary>
         public HttpResponseMessage GetConstituent(string id) 
         {
@@ -87,13 +83,13 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             
             // Handle bad response.
             if (!response.IsSuccessStatusCode)
-            {
+            {   
                 int statusCode = (int) response.StatusCode;
                 switch (statusCode)
                 {
                     // ID formatted incorrectly.
                     case 400:
-                    response.Content = new StringContent("The specified constituent ID was not in the correct format.");
+                    response.Content = new StringContent("{ error: \"The specified constituent ID was not in the correct format.\" }");
                     break;
                     
                     // Token expired. Refresh the token and try again.
@@ -107,7 +103,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
                     
                     // Constituent not found.
                     case 404:
-                    response.Content = new StringContent("No constituent record was found with the specified ID.");
+                    response.Content = new StringContent("{ error: \"No constituent record was found with the specified ID.\" }");
                     break;
                 }
             }
@@ -117,7 +113,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         
         
         /// <summary>
-        /// 
+        /// Returns a response containing a paginated list of constituents.
         /// </summary>
         public HttpResponseMessage GetConstituents() 
         {

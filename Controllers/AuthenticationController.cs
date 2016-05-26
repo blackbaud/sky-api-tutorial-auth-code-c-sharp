@@ -2,12 +2,10 @@ using System;
 using System.Net.Http;
 using Blackbaud.AuthCodeFlowTutorial.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers 
 {
-    
     
     /// <summary>
     /// Contains endpoints that interact with the authorization provider.
@@ -16,18 +14,11 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
     public class AuthenticationController : Controller 
     {
             
+        private readonly IAuthenticationService _authService;
         
-        private readonly IOptions<AppSettings> AppSettings;
-        private readonly IAuthenticationService AuthService;
-        
-        
-        /// <summary>
-        /// Initializer for controller.
-        /// </summary>
-        public AuthenticationController(IOptions<AppSettings> AppSettings, IAuthenticationService AuthService) 
+        public AuthenticationController(IAuthenticationService authService) 
         {
-            this.AppSettings = AppSettings;
-            this.AuthService = AuthService;
+            _authService = authService;
         }
         
         
@@ -38,7 +29,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         public ActionResult Authenticated()
         {
             return Json(new { 
-                authenticated = AuthService.IsAuthenticated()
+                authenticated = _authService.IsAuthenticated()
             });
         }
                 
@@ -50,7 +41,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         public ActionResult Callback()
         {
             string code = Request.Query["code"];
-            AuthService.ExchangeCodeForAccessToken(code);
+            _authService.ExchangeCodeForAccessToken(code);
             return Redirect("/");
         }
         
@@ -61,7 +52,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         [HttpGet("login")]
         public ActionResult LogIn()
         {
-            Uri address = AuthService.GetAuthorizationUri();
+            Uri address = _authService.GetAuthorizationUri();
             return Redirect(address.ToString());
         }
         
@@ -72,7 +63,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         [HttpGet("logout")]
         public ActionResult LogOut()
         {
-            AuthService.LogOut();
+            _authService.LogOut();
             return Redirect("/");
         }
         
@@ -83,7 +74,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
         [HttpGet("refresh-token")]
         public ActionResult RefreshToken()
         {
-            HttpResponseMessage response = AuthService.RefreshAccessToken();
+            HttpResponseMessage response = _authService.RefreshAccessToken();
             string jsonString = response.Content.ReadAsStringAsync().Result;
             return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
         }

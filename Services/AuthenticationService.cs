@@ -16,7 +16,6 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
         private readonly IOptions<AppSettings> _appSettings;
         private ISessionService _sessionService;
 
-        
         public AuthenticationService(IOptions<AppSettings> appSettings, ISessionService sessionService)
         {
             _appSettings = appSettings;
