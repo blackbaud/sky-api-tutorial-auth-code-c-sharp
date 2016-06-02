@@ -31,6 +31,19 @@ namespace Blackbaud.AuthCodeFlowTutorial
         
         
         /// <summary>
+        /// Forces local SSL.
+        /// </summary>
+        private static RequestDelegate ChangeContextToHttps(RequestDelegate next)
+        {
+            return async context =>
+            {
+                context.Request.Scheme = "https";
+                await next(context);
+            };
+        }
+        
+        
+        /// <summary>
         /// Adds services to the container.
         /// </summary>
         public void ConfigureServices(IServiceCollection services)
@@ -68,6 +81,8 @@ namespace Blackbaud.AuthCodeFlowTutorial
 
             if (env.IsDevelopment())
             {
+                // Uncomment for local SSL:
+                //app.Use(ChangeContextToHttps);
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
             }
