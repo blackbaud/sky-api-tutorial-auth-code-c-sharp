@@ -1,5 +1,8 @@
 # SKY API Authorization Code Flow Tutorial
 
+### Live demo:
+View the [demo app](https://dotnetauthcode.azurewebsites.net/) hosted on Microsoft Azure.
+
 ### Run locally:
 
 - Download and install [.NET Core SDK](https://www.microsoft.com/net/core)
