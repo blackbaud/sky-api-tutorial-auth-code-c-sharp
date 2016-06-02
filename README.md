@@ -2,10 +2,11 @@
 
 ### Run locally:
 
-- [Download and install](https://www.microsoft.com/net/core) .NET Core rc2
+- Download and install [.NET Core SDK](https://www.microsoft.com/net/core)
 - Open Terminal/Command Prompt and type:
 ```
-git clone https://github.com/blackbaud/sky-api-auth-tutorial-c-sharp.git
+$  git clone https://github.com/blackbaud/sky-api-auth-tutorial-c-sharp.git
+$  cd sky-api-auth-tutorial-c-sharp
 ```
 - Duplicate **appsettings.json-sample** as **appsettings.Development.json** and fill in the missing values (all required).
 ```
@@ -20,15 +21,15 @@ git clone https://github.com/blackbaud/sky-api-auth-tutorial-c-sharp.git
 ```
 - Open Terminal/Command Prompt and type:
 ```
-dotnet restore
+$  dotnet restore
 ```
 - On a Mac, type:
 ```
-export ASPNETCORE_ENVIRONMENT=Development && dotnet run
+$  export ASPNETCORE_ENVIRONMENT=Development && dotnet run
 ```
 - On a PC, type:
 ```
-set ASPNETCORE_ENVIRONMENT=Development && dotnet run
+$  set ASPNETCORE_ENVIRONMENT=Development && dotnet run
 ```
 
 Visit [http://localhost:5000/](http://localhost:5000/).
