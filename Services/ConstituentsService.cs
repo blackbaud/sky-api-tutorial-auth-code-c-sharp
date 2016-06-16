@@ -21,7 +21,7 @@ namespace Blackbaud.AuthCodeFlowTutorial.Services
             _appSettings = appSettings;
             _sessionService = sessionService;
             _authService = authService;
-            _apiBaseUri = new Uri(new Uri(_appSettings.Value.SkyApiBaseUri), "constituent/");
+            _apiBaseUri = new Uri(new Uri(_appSettings.Value.SkyApiBaseUri), "constituent/v1/");
         }
         
         
