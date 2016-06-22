@@ -1,6 +1,9 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lan="en">
 <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@ViewData["Title"]</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <style>
@@ -18,8 +21,8 @@
 -->
 <body ng-app="AuthCodeFlowTutorial">
   <div class="container" ng-controller="ConstituentCtrl" ng-cloak>
-    <h1>Blackbaud SKY API Authorization Code Flow Tutorial</h1>
-    <p>@ViewData["Message"]</p>
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead">@Html.Raw(@ViewData["Message"])</p>
     @RenderBody()
     <div class="content" ng-show="isReady">
 
