@@ -1,4 +1,6 @@
-# SKY API Authorization Code Flow Tutorial
+# ASP.NET C# Authorization Code Flow Tutorial - SKY API
+
+A demonstration of the authorization code flow within SKY API, implemented using [ASP.NET Core RC2](https://blogs.msdn.microsoft.com/webdev/2016/05/16/announcing-asp-net-core-rc2/).
 
 ### Live demo:
 View the [demo app](https://dotnetauthcode.azurewebsites.net/) hosted on Microsoft Azure.

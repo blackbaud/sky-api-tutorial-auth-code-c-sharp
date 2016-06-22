@@ -42,8 +42,8 @@
       <div ng-if="isAuthenticated">
         <h3>Constituent: {{ constituent.name }}</h3>
         <p>
-          See <a href="https://developer.sky.blackbaud.com/contract-reference#Constituent" target="_blank">Constituent</a>
-          within the Blackbaud SKY API contact reference for a full listing of properties.
+          See <a href="https://developer.sky.blackbaud.com/constituent-entity-reference" target="_blank">Constituent</a>
+          within the SKY API entity reference for a full listing of properties.
         </p>
         <p ng-if="::constituent.error" ng-bind="::constituent.error" class="alert alert-danger"></p>
         <div ng-if="::constituent.id" class="table-responsive">
@@ -120,7 +120,7 @@
                           $scope.isReady = true;
                       });
                   });
-                  
+
                   // Manually refresh access token.
                   $scope.refreshToken = function () {
                       $http.get('/auth/refresh-token').then(function (res) {
