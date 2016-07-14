@@ -1,13 +1,13 @@
-# ASP.NET C# Authorization Code Flow Tutorial - SKY API
+# .NET Core C# Authorization Code Flow Tutorial - SKY API
 
-A demonstration of the authorization code flow within SKY API, implemented using [ASP.NET Core RC2](https://blogs.msdn.microsoft.com/webdev/2016/05/16/announcing-asp-net-core-rc2/).
+A demonstration of the authorization code flow within SKY API, implemented using [.NET Core](https://www.microsoft.com/net/core/platform).
 
 ### Live demo:
 View the [demo app](https://dotnetauthcode.azurewebsites.net/) hosted on Microsoft Azure.
 
 ### Run locally:
 
-- Download and install [.NET Core SDK](https://www.microsoft.com/net/core)
+- Download and install [.NET Core SDK](https://www.microsoft.com/net/core/)
 - Open Terminal/Command Prompt and type:
 ```
 $  git clone https://github.com/blackbaud/sky-api-auth-tutorial-c-sharp.git
@@ -61,7 +61,3 @@ Visit [http://localhost:5000/](http://localhost:5000/).
         </tr>
     </table>
 1. Add a new deployment to point to a cloned version of this repository and sync.
-
-### Additional Reading
-- [Azure App Service and ASP.NET Core RC2](https://blogs.msdn.microsoft.com/appserviceteam/2016/05/24/azure-app-service-and-asp-net-core-rc2/)
-- [Your First ASP.NET Core Application on a Mac Using Visual Studio Code](https://docs.asp.net/en/latest/tutorials/your-first-mac-aspnet.html#publishing-to-azure)
