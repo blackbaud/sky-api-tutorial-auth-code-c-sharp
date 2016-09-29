@@ -43,17 +43,19 @@
         = AngularJS uses a templating engine similar to HandlebarsJS to output model data.
       -->
       <div ng-if="isAuthenticated">
-        <h3>Constituent: {{ constituent.name }}</h3>
-        <p>
-          See <a href="https://developer.sky.blackbaud.com/constituent-entity-reference" target="_blank">Constituent</a>
-          within the SKY API entity reference for a full listing of properties.
-        </p>
+        <div class="well">
+          <h3>Constituent: {{ constituent.name }}</h3>
+          <p>
+            See <a href="https://developer.sky.blackbaud.com/constituent-entity-reference#Constituent" target="_blank">Constituent</a>
+            within the Blackbaud SKY API contact reference for a full listing of properties.
+          </p>
+        </div>
         <p ng-if="::constituent.error" ng-bind="::constituent.error" class="alert alert-danger"></p>
         <div ng-if="::constituent.id" class="table-responsive">
           <table class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>Name</th>
+                <th>Key</th>
                 <th>Value</th>
               </tr>
             </thead>
