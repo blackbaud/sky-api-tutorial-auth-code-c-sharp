@@ -26,15 +26,19 @@ $  cd sky-api-auth-tutorial-c-sharp
 ```
 - Open Terminal/Command Prompt and type:
 ```
-$  dotnet restore
+dotnet restore
 ```
 - On a Mac, type:
 ```
-$  export ASPNETCORE_ENVIRONMENT=Development && dotnet run
+export ASPNETCORE_ENVIRONMENT=Development && dotnet run
 ```
 - On a PC, type:
 ```
-$  set ASPNETCORE_ENVIRONMENT=Development && dotnet run
+set ASPNETCORE_ENVIRONMENT=Development && dotnet run
+```
+- (PowerShell users may type:)
+```
+$Env:ASPNETCORE_ENVIRONMENT = "Development"
 ```
 
 Visit [http://localhost:5000/](http://localhost:5000/).
