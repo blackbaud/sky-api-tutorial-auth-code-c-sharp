@@ -2,7 +2,7 @@
 
 A demonstration of the authorization code flow within SKY API, implemented using [.NET Core](https://www.microsoft.com/net/core/platform).
 
-This code sample is a very basic example of how to interact with the Blackbaud OAuth 2.0 Service.  You are free to choose the client library and method that best suit your needs when creating production-level applications
+This code sample is a very basic example of how to interact with the Blackbaud OAuth 2.0 Service.  You are free to choose the client library and method that best suit your needs when creating production-level applications.
 
 ### Live demo:
 View the [demo app](https://dotnetauthcode.azurewebsites.net/) hosted on Microsoft Azure.
