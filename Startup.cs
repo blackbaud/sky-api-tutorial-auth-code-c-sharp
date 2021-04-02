@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 
 namespace Blackbaud.AuthCodeFlowTutorial
 {
@@ -19,7 +20,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
         /// <summary>
         /// Injects app settings from a JSON file.
         /// </summary>
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -44,7 +45,9 @@ namespace Blackbaud.AuthCodeFlowTutorial
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<IConstituentsService, ConstituentsService>();
             services.AddTransient<ISessionService, SessionService>();
-            
+            services.AddMvc(options => options.EnableEndpointRouting = false);
+            services.AddControllersWithViews().AddNewtonsoftJson();
+
             // Add MVC.
             services.AddMvc();
             
@@ -53,7 +56,13 @@ namespace Blackbaud.AuthCodeFlowTutorial
             services.AddDistributedMemoryCache();
             services.AddSession(options => { 
                 options.IdleTimeout = TimeSpan.FromMinutes(10);
-                options.CookieName = ".AuthCodeFlowTutorial.Session";
+                options.Cookie.Name = ".AuthCodeFlowTutorial.Session";
+            });
+            services.AddLogging(logging =>
+            {
+                logging.AddConfiguration(Configuration.GetSection("Logging"));
+                logging.AddConsole();
+                logging.AddDebug();
             });
         }
 
@@ -61,11 +70,8 @@ namespace Blackbaud.AuthCodeFlowTutorial
         /// <summary>
         /// Configures the HTTP request pipeline.
         /// </summary>
-        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
