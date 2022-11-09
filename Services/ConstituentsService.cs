@@ -1,123 +1,93 @@
-using System;
-using System.Net.Http;
-using Microsoft.Extensions.Options;
+using Blackbaud.AuthCodeFlowTutorial.Models;
+using System.Net.Http.Headers;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
-    
+
     /// <summary>
     /// Interacts directly with SKY API Constituent endpoints.
     /// </summary>
     public class ConstituentsService : IConstituentsService
     {
-        
-        private Uri _apiBaseUri;
-        private readonly IOptions<AppSettings> _appSettings;
         private readonly ISessionService _sessionService;
         private readonly IAuthenticationService _authService;
-        
-        public ConstituentsService(IOptions<AppSettings> appSettings, ISessionService sessionService, IAuthenticationService authService)
+        private readonly IHttpClientFactory _httpClientFactory = null!;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ConstituentsService(ISessionService sessionService, IAuthenticationService authService, IHttpClientFactory httpClientFactory)
         {
-            _appSettings = appSettings;
             _sessionService = sessionService;
             _authService = authService;
-            _apiBaseUri = new Uri(new Uri(_appSettings.Value.SkyApiBaseUri), "constituent/v1/");
+            _httpClientFactory = httpClientFactory;
         }
-        
-        
-        /// <summary>
-        /// Requests that the auth service refresh the access token and returns true if successful.
-        /// </summary>
-        private bool TryRefreshToken()
+
+        private async Task<HttpClient> GetClient(CancellationToken cancellationToken)
         {
-            HttpResponseMessage tokenResponse = _authService.RefreshAccessToken();
-            return (tokenResponse.IsSuccessStatusCode);
-        }
-        
-        
-        /// <summary>
-        /// Performs HTTP requests (POST/GET) and returns the response.
-        /// <param name="method" type="String">The HTTP method, post, get</param>
-        /// <param name="endpoint" type="String">The API endpoint</param>
-        /// <param name="content" type="HttpContent">The request body content</param>
-        /// </summary>
-        private HttpResponseMessage Proxy(string method, string endpoint, StringContent content = null)
-        {
-            using (HttpClient client = new HttpClient())
+            var httpClient = _httpClientFactory.CreateClient("ConstituentService");
+
+            // check for and invalid access token
+            if (!_authService.IsAccessTokenValid() && _authService.HasValidRefreshToken())
             {
-                string token = _sessionService.GetAccessToken();
-                HttpResponseMessage response;
-                
-                // Set constituent endpoint.
-                client.BaseAddress = _apiBaseUri;
-                
-                // Set request headers.
-                client.DefaultRequestHeaders.Add("bb-api-subscription-key", _appSettings.Value.AuthSubscriptionKey);
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", "Bearer " + token);
-                
-                // Make the request to constituent API.
-                switch (method.ToLower())
-                {
-                    default:
-                    case "get":
-                        response = client.GetAsync(endpoint).Result;
-                        break;
-                    
-                    case "post":
-                        response = client.PostAsync(endpoint, content).Result;
-                        break;
-                }
-                
-                return response;
+                await _authService.RefreshAccessToken(cancellationToken);
             }
+            var token = _sessionService.GetAccessToken();
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            return httpClient;
         }
-        
-        
+
         /// <summary>
         /// Returns a response containing a constituent record (from an ID).
         /// </summary>
-        public HttpResponseMessage GetConstituent(string id) 
+        public async Task<ConstituentModel> GetConstituentAsync(string id, CancellationToken cancellationToken)
         {
-            // Make the request.
-            HttpResponseMessage response = Proxy("get", "constituents/" + id);
-            
-            // Handle bad response.
-            if (!response.IsSuccessStatusCode)
-            {   
-                int statusCode = (int) response.StatusCode;
-                switch (statusCode)
-                {
-                    // ID formatted incorrectly.
-                    case 400:
-                    response.Content = new StringContent("{ error: \"The specified constituent ID was not in the correct format.\" }");
-                    break;
-                    
-                    // Token expired. Refresh the token and try again.
-                    case 401:
-                    bool tokenRefreshed = TryRefreshToken();
-                    if (tokenRefreshed)
-                    {
-                        response = Proxy("get", "constituents/" + id);
-                    }
-                    break;
-                    
-                    // Constituent not found.
-                    case 404:
-                    response.Content = new StringContent("{ error: \"No constituent record was found with the specified ID.\" }");
-                    break;
-                }
+            var httpClient = await GetClient(cancellationToken);
+            var response = await httpClient.GetAsync($"constituents/{id}", cancellationToken);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null!;
             }
-            
-            return response;
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var model = await response.Content.ReadFromJsonAsync<ConstituentModel>(cancellationToken: cancellationToken);
+
+            return model;
         }
-        
-        
+
+
         /// <summary>
         /// Returns a response containing a paginated list of constituents.
         /// </summary>
-        public HttpResponseMessage GetConstituents() 
+        public async Task<IEnumerable<ConstituentModel>> GetConstituentsAsync(CancellationToken cancellationToken)
         {
-            return Proxy("get", "constituents/");
+            var httpClient = await GetClient(cancellationToken);
+
+            var response = await httpClient.GetAsync($"constituents", cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var models = await response.Content.ReadFromJsonAsync<IEnumerable<ConstituentModel>>(cancellationToken: cancellationToken);
+
+            return models;
         }
     }
 }

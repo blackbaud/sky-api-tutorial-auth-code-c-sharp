@@ -1,14 +1,15 @@
-using System;
-using System.Net.Http;
+using Blackbaud.AuthCodeFlowTutorial.Models;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Services
 {
     public interface IAuthenticationService
-    {   
-        HttpResponseMessage ExchangeCodeForAccessToken(string code);
+    {
+        Task<RefreshTokenResponseModel> ExchangeCodeForAccessToken(string code, string state, CancellationToken cancellationToken);
         Uri GetAuthorizationUri();
         bool IsAuthenticated();
+        bool IsAccessTokenValid();
+        bool HasValidRefreshToken();
         void LogOut();
-        HttpResponseMessage RefreshAccessToken();
+        Task<RefreshTokenResponseModel> RefreshAccessToken(CancellationToken cancellationToken);
     }
 }

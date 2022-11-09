@@ -76,3 +76,7 @@ _[Ss]cripts
 *.nupkg
 *.ncrunchsolution
 *.dot[Cc]over
+/.vs
+/.config
+/Properties/ServiceDependencies/csharp-demo - Web Deploy/profile.arm.json
+/Properties/PublishProfiles/csharp-demo - Web Deploy.pubxml
