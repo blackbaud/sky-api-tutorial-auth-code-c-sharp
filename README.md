@@ -18,7 +18,7 @@ $  cd sky-api-auth-tutorial-c-sharp
     "AppSettings": {
         "AuthClientId": "<Your developer app ID>",
         "AuthClientSecret": "<Your developer app secret>",
-        "AuthRedirectUri": "http://localhost:5000/auth/callback",
+        "AuthRedirectUri": "https://localhost:5001/auth/callback",
         "AuthSubscriptionKey": "<Your developer subscription key>"
     }
 }
@@ -40,7 +40,7 @@ set ASPNETCORE_ENVIRONMENT=Development && dotnet run
 $Env:ASPNETCORE_ENVIRONMENT = "Development"
 ```
 
-Visit [http://localhost:5000/](http://localhost:5000/).
+Visit [https://localhost:5001/](https://localhost:5001/).
 
 ### Deploy to Azure App Services:
 1. Login to Azure Portal and create a new App Service
