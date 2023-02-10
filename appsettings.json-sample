@@ -2,7 +2,7 @@
     "AppSettings": {
         "AuthClientId": "",
         "AuthClientSecret": "",
-        "AuthRedirectUri": "http://localhost:5000/auth/callback",
+        "AuthRedirectUri": "https://localhost:5001/auth/callback",
         "AuthSubscriptionKey": ""
     }
 }

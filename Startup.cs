@@ -1,22 +1,16 @@
-using System;
 using Blackbaud.AuthCodeFlowTutorial.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace Blackbaud.AuthCodeFlowTutorial
 {
     public class Startup
     {
-        
+
         /// Stores app settings.
         public IConfiguration Configuration { get; }
-        
-        
+
+
         /// <summary>
         /// Injects app settings from a JSON file.
         /// </summary>
@@ -29,8 +23,8 @@ namespace Blackbaud.AuthCodeFlowTutorial
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
-        
-        
+
+
         /// <summary>
         /// Adds services to the container.
         /// </summary>
@@ -38,23 +32,48 @@ namespace Blackbaud.AuthCodeFlowTutorial
         {
             // Configure app settings so we can inject it into other classes.
             services.AddOptions();
+            var appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
-            
+
+            // Add Http client for authorizing with SKY API
+            services.AddHttpClient<IAuthenticationService, AuthenticationService>("AuthenticationService", client =>
+            {
+                // Set the base address to the AuthBaseUrl
+                client.BaseAddress = new Uri(appSettings.AuthBaseUri);
+
+                // encode the client id and secret
+                var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{appSettings.AuthClientId}:{appSettings.AuthClientSecret}"));
+
+                // Add the Authorization header using basic authentication of client id and secret base 64 encoded
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encoded);
+            });
+
+            // Add Http client for constituent api
+            services.AddHttpClient<IConstituentsService, ConstituentsService>("ConstituentService", client =>
+            {
+                // Set the base address to the SkyApiBaseUri and append constituent/v1/
+                client.BaseAddress = new Uri($"{appSettings.SkyApiBaseUri}constituent/v1/");
+
+                // Set request headers for bb-api-subscription-key
+                client.DefaultRequestHeaders.Add("bb-api-subscription-key", appSettings.AuthSubscriptionKey);
+            });
+
             // Services to be injected.
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
             services.AddSingleton<IConstituentsService, ConstituentsService>();
             services.AddTransient<ISessionService, SessionService>();
             services.AddMvc(options => options.EnableEndpointRouting = false);
-            services.AddControllersWithViews().AddNewtonsoftJson();
+            services.AddControllersWithViews();
 
             // Add MVC.
             services.AddMvc();
-            
+
             // Configure session.
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
-            services.AddSession(options => { 
+            services.AddSession(options =>
+            {
                 options.IdleTimeout = TimeSpan.FromMinutes(10);
                 options.Cookie.Name = ".AuthCodeFlowTutorial.Session";
             });
@@ -75,13 +94,12 @@ namespace Blackbaud.AuthCodeFlowTutorial
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            
+
             app.UseSession();
             app.UseStaticFiles();
             app.UseMvc(routes =>
@@ -90,7 +108,7 @@ namespace Blackbaud.AuthCodeFlowTutorial
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-            
+
         }
     }
 }

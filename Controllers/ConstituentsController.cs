@@ -1,11 +1,9 @@
-using System.Net.Http;
 using Blackbaud.AuthCodeFlowTutorial.Services;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace Blackbaud.AuthCodeFlowTutorial.Controllers
 {
-    
+
     /// <summary>
     /// Contains endpoints that interact with SKY API (constituents).
     /// </summary>
@@ -14,44 +12,46 @@ namespace Blackbaud.AuthCodeFlowTutorial.Controllers
     {
 
         private readonly IConstituentsService _constituentsService;
-        
-        public ConstituentsController(IConstituentsService constituentsService) 
+
+        public ConstituentsController(IConstituentsService constituentsService)
         {
             _constituentsService = constituentsService;
         }
-        
-        
+
+
         /// <summary>
         /// Returns a paginated list of constituents.
         /// </summary>
-        [HttpGet("constituents")]
-        public ActionResult GetList()
+        [HttpGet()]
+        public async Task<IActionResult> GetList(CancellationToken cancellationToken)
         {
-            return RequireAuth(_constituentsService.GetConstituents());
+            try
+            {
+                var model = await _constituentsService.GetConstituentsAsync(cancellationToken);
+                return Ok(model);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return RedirectToAction("LogIn", "Authentication");
+            }
         }
-        
-        
+
+
         /// <summary>
         /// Returns a constituent record from a provided ID.
         /// </summary>
         [HttpGet("{id}")]
-        public ActionResult GetById(string id)
+        public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
         {
-            return RequireAuth(_constituentsService.GetConstituent(id));
-        }
-        
-        
-        /// <summary>
-        /// Redirects to Log In if response returns a 401.
-        /// </summary>
-        private ActionResult RequireAuth(HttpResponseMessage response)
-        {
-            if ((int) response.StatusCode == 401)
+            try
+            {
+                var model = await _constituentsService.GetConstituentAsync(id, cancellationToken);
+                return Ok(model);
+            }
+            catch (UnauthorizedAccessException)
             {
                 return RedirectToAction("LogIn", "Authentication");
             }
-            string jsonString = response.Content.ReadAsStringAsync().Result;
-            return Json(JsonConvert.DeserializeObject<dynamic>(jsonString));
         }
-    }
+    }        
 }
