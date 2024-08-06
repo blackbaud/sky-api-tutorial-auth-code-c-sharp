@@ -1,140 +1,123 @@
 ﻿<!DOCTYPE html>
 <html lan="en">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@ViewData["Title"]</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <style>
-    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
-      display: none !important;
-    }
-  </style>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 </head>
 
-
-<!--
-  INITIALIZE THE APP
-  = [ng-app] The name of the AngularJS application to use.
-  = [ng-controller] The name of the AngularJS controller function, which handles the model data.
--->
-<body ng-app="AuthCodeFlowTutorial">
-  <div class="container" ng-controller="ConstituentCtrl" ng-cloak>
-    <h1>@ViewData["Title"]</h1>
-    <p class="lead">@Html.Raw(@ViewData["Message"])</p>
-    @RenderBody()
-    <div class="content" ng-show="isReady">
-
-
-      <!--
-        LOGIN
-        = This section is hidden if the session has NOT been authenticated.
-      -->
-      <div ng-if="!isAuthenticated">
-        <a href="/auth/login" class="btn btn-primary">Log in</a>
-      </div>
-
-
-      <!--
-        CONSTITUENT DATA
-        = This section is only visible when the session has been authenticated and
-        = appropriate constituent data has been returned.
-        = AngularJS uses a templating engine similar to HandlebarsJS to output model data.
-      -->
-      <div ng-if="isAuthenticated">
-        <div class="well">
-          <h3>Constituent: {{ constituent.name }}</h3>
-          <p>
-            See <a href="https://developer.blackbaud.com/skyapi/apis/constituent/entities#Constituent" target="_blank">Constituent</a>
-            within the Blackbaud SKY API contact reference for a full listing of properties.
-          </p>
+<body>
+    <div class="container">
+        <h1>@ViewData["Title"]</h1>
+        <p class="lead">@Html.Raw(@ViewData["Message"])</p>
+        @RenderBody()
+        <div class="content">
+            <div id="login-section">
+                <a href="/auth/login" class="btn btn-primary">Log in</a>
+            </div>
+            <div id="constituent-data" style="display: none;">
+                <div class="well">
+                    <h3>Constituent: <span id="constituent-name"></span></h3>
+                    <p>
+                        See <a href="https://developer.blackbaud.com/skyapi/apis/constituent/entities#Constituent" target="_blank">Constituent</a>
+                        within the Blackbaud SKY API contact reference for a full listing of properties.
+                    </p>
+                </div>
+                <p id="constituent-error" class="alert alert-danger" style="display: none;"></p>
+                <div id="constituent-table" class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>id</td>
+                                <td id="constituent-id"></td>
+                            </tr>
+                            <tr>
+                                <td>type</td>
+                                <td id="constituent-type"></td>
+                            </tr>
+                            <tr>
+                                <td>lookup_id</td>
+                                <td id="constituent-lookup-id"></td>
+                            </tr>
+                            <tr>
+                                <td>first</td>
+                                <td id="constituent-first"></td>
+                            </tr>
+                            <tr>
+                                <td>last</td>
+                                <td id="constituent-last"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    <a href="/auth/logout" class="btn btn-primary">Log out</a>
+                    <button id="refresh-token-btn" class="btn btn-primary">Refresh Access Token</button>
+                </p>
+                <div id="token-response" style="display: none;">
+                    <h4>Token Response:</h4>
+                    <pre id="token-response-pre"></pre>
+                </div>
+            </div>
         </div>
-        <p ng-if="::constituent.error" ng-bind="::constituent.error" class="alert alert-danger"></p>
-        <div ng-if="::constituent.id" class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>Key</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>id</td>
-                <td>{{ constituent.id }}</td>
-              </tr>
-              <tr>
-                <td>type</td>
-                <td>{{ constituent.type }}</td>
-              </tr>
-              <tr>
-                <td>lookup_id</td>
-                <td>{{ constituent.lookup_id }}</td>
-              </tr>
-              <tr>
-                <td>first</td>
-                <td>{{ constituent.first }}</td>
-              </tr>
-              <tr>
-                <td>last</td>
-                <td>{{ constituent.last }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p>
-          <a href="/auth/logout" class="btn btn-primary">Log out</a>
-          <button ng-click="refreshToken()" class="btn btn-primary">Refresh Access Token</button>
-        </p>
-        <div ng-if="tokenResponse">
-          <h4>Token Response:</h4>
-          <pre ng-bind="tokenResponse | json"></pre>
-        </div>
-      </div>
+        <div class="lead" id="loading-message">Loading...</div>
     </div>
 
+    <script>
+        (function () {
+            'use strict';
 
-    <div class="lead" ng-hide="isReady">Loading...</div>
-  </div>
+            // Check user access token.
+            fetch('/auth/authenticated')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated === false) {
+                        document.getElementById('login-section').style.display = 'block';
+                        document.getElementById('loading-message').style.display = 'none';
+                        return;
+                    }
+
+                    // Access token is valid. Fetch constituent record.
+                    fetch('/api/constituents/280')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('constituent-name').textContent = data.name;
+                            document.getElementById('constituent-id').textContent = data.id;
+                            document.getElementById('constituent-type').textContent = data.type;
+                            document.getElementById('constituent-lookup-id').textContent = data.lookup_id;
+                            document.getElementById('constituent-first').textContent = data.first;
+                            document.getElementById('constituent-last').textContent = data.last;
+                            document.getElementById('login-section').style.display = 'none';
+                            document.getElementById('constituent-data').style.display = 'block';
+                            document.getElementById('loading-message').style.display = 'none';
+                        })
+                        .catch(error => {
+                            document.getElementById('constituent-error').textContent = 'Error fetching constituent data: ' + error;
+                            document.getElementById('constituent-error').style.display = 'block';
+                            document.getElementById('loading-message').style.display = 'none';
+                        });
+                });
 
 
-  <!--
-    SCRIPTS
-    = Data is retrieved from Sky API via an AngularJS application.
-  -->
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
-  <script>
-      (function (angular) {
-          'use strict';
-
-          angular.module('AuthCodeFlowTutorial', [])
-              .controller('ConstituentCtrl', function ($scope, $http) {
-
-                  // Check user access token.
-                  $http.get('/auth/authenticated').then(function (res) {
-                      $scope.isAuthenticated = res.data.authenticated;
-                      if ($scope.isAuthenticated === false) {
-                          $scope.isReady = true;
-                          return;
-                      }
-
-                      // Access token is valid. Fetch constituent record.
-                      $http.get('/api/constituents/280').then(function (res) {
-                          $scope.constituent = res.data;
-                          $scope.isReady = true;
-                      });
-                  });
-
-                  // Manually refresh access token.
-                  $scope.refreshToken = function () {
-                      $http.get('/auth/refresh-token').then(function (res) {
-                          $scope.tokenResponse = res.data;
-                      });
-                  };
-              });
-      })(window.angular);
-  </script>
-  @RenderSection("scripts", required: false)
+            // Manually refresh access token.
+            document.getElementById('refresh-token-btn').addEventListener('click', function () {
+                fetch('/auth/refresh-token')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('token-response-pre').textContent = JSON.stringify(data, null, 2);
+                        document.getElementById('token-response').style.display = 'block';
+                    });
+            });
+        })();
+    </script>
+    @RenderSection("scripts", required: false)
 </body>
 </html>
